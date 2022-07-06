@@ -1,0 +1,55 @@
+- name: Upgrade the Ubuntu Distribution Packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+    autoremove: yes
+    autoclean: yes
+
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: ".*{{ item }}$"
+    line: "{{ hostvars[item].ansible_host }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+
+- name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+  shell: |
+    swapoff -a
+
+- name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
+
+- name: "Install required packages on Ubuntu"
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - unzip
+    - tar
+    - apt-transport-https
+    - libseccomp2
+    - util-linux
+    - ca-certificates
+    - curl
+    - net-tools
+    - tree
+
+- name: "Load br_netfilter kernel module"
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: "Set bridge-nf-call-iptables"
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+
+- name: "Set ip_forward"
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1

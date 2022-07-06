@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: haproxy
+  namespace: kube-system
+spec:
+  containers:
+  - image: haproxy
+    name: haproxy
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: localhost
+        path: /healthz
+        port: {{kubernetes_api_port}}
+        scheme: HTTPS
+    volumeMounts:
+    - mountPath: /usr/local/etc/haproxy/haproxy.cfg
+      name: haproxyconf
+      readOnly: true
+    - mountPath: /etc/ssl/certs
+      name: ca-certs
+      readOnly: true
+    - mountPath: /etc/ca-certificates
+      name: etc-ca-certificates
+      readOnly: true
+    - mountPath: /etc/pki
+      name: etc-pki
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true
+    - mountPath: /usr/local/share/ca-certificates
+      name: usr-local-share-ca-certificates
+      readOnly: true
+    - mountPath: /usr/share/ca-certificates
+      name: usr-share-ca-certificates
+      readOnly: true
+
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /etc/haproxy/haproxy.cfg
+      type: FileOrCreate
+    name: haproxyconf
+  - hostPath:
+      path: /etc/ssl/certs
+      type: DirectoryOrCreate
+    name: ca-certs
+  - hostPath:
+      path: /etc/ca-certificates
+      type: DirectoryOrCreate
+    name: etc-ca-certificates
+  - hostPath:
+      path: /etc/pki
+      type: DirectoryOrCreate
+    name: etc-pki
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+  - hostPath:
+      path: /usr/local/share/ca-certificates
+      type: DirectoryOrCreate
+    name: usr-local-share-ca-certificates
+  - hostPath:
+      path: /usr/share/ca-certificates
+      type: DirectoryOrCreate
+    name: usr-share-ca-certificates
+
+status: {}

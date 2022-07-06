@@ -1,0 +1,47 @@
+- name: Recursively create required directories.
+  ansible.builtin.file:
+    path: "{{item}}"
+    state: directory
+    recurse: yes
+  with_items:
+    - "/etc/kubernetes/manifests"
+    - "/etc/haproxy"
+    - "/etc/keepalived"
+
+- name: Configure Keepalived API Server check, HAProxy configuration and HAProxy Manifest.
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - {
+        src: "/vagrant/ansible/template/haproxy.cfg.j2",
+        dest: "/etc/haproxy/haproxy.cfg",
+      }
+    - {
+        src: "/vagrant/ansible/template/check_apiserver.sh.j2",
+        dest: "/etc/keepalived/check_apiserver.sh",
+      }
+    - {
+        src: "/vagrant/ansible/template/keepalived.conf.j2",
+        dest: "/etc/keepalived/keepalived.conf",
+      }
+    - {
+        src: "/vagrant/ansible/template/haproxy-manifest.yaml.j2",
+        dest: "/etc/kubernetes/manifests/haproxy.yaml",
+      }
+    - {
+        src: "/vagrant/ansible/template/keepalived-manifest.yaml.j2",
+        dest: "/etc/kubernetes/manifests/keepalived.yaml",
+      }
+  vars:
+    check_script: "/etc/keepalived/check_apiserver.sh"
+    state: "{{ (groups['load_balancer'].index(inventory_hostname) == 0) | ternary('MASTER','BACKUP') }}"
+    priority: "{{ (groups['all']|length - groups['all'].index(inventory_hostname)) * 250 // (groups['all']|length) }}"
+    interface: "{{ vrrp_nic }}"
+    authentication_password: 1234
+    virtual_router_id: 42
+
+- name: Generate Kubeadm configuration for each master instance.
+  ansible.builtin.template:
+    src: /vagrant/ansible/template/kubeadm-cfg.yaml.j2
+    dest: "/tmp/kubeadm-cfg.yaml"

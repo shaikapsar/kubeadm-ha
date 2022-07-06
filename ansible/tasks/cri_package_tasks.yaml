@@ -1,0 +1,41 @@
+- name: "Get Containerd"
+  ansible.builtin.unarchive:
+    src: "https://github.com/containerd/containerd/releases/download/v{{ containerd_release_version }}/cri-containerd-cni-{{ containerd_release_version }}-linux-amd64.tar.gz"
+    dest: "/"
+    remote_src: yes
+
+- name: "Create a directory for cni binary"
+  file: path={{ cni_bin_dir }} state=directory
+
+- name: "Create a directory for cni config files"
+  file: path={{ cni_conf_dir }} state=directory
+
+- name: "Create a directory for containerd config"
+  file: path=/etc/containerd state=directory
+
+- name: "Start Containerd"
+  systemd: name=containerd daemon_reload=yes state=started enabled=yes
+
+- name: "Check kubelet args in kubelet config (Ubuntu)"
+  shell: grep "^Environment=\"KUBELET_EXTRA_ARGS=" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf || true
+  register: check_args
+
+- name: "Add runtime args in kubelet conf (Ubuntu)"
+  lineinfile:
+    dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+    line: 'Environment="KUBELET_EXTRA_ARGS= --runtime-cgroups=/system.slice/containerd.service --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"'
+    insertafter: '\[Service\]'
+
+- name: "Start Kubelet"
+  systemd: name=kubelet daemon_reload=yes state=started enabled=yes
+
+- name: Prepare configuration for Forwarding IPv4 and letting iptables see bridged traffic
+  ansible.builtin.copy:
+    src: "/vagrant/ansible/files/crictl.yaml"
+    dest: "/etc/crictl.yaml"
+
+- name: "Pre-pull pause container image"
+  shell: |
+    /usr/local/bin/ctr pull k8s.gcr.io/pause:3.7
+    /usr/local/bin/crictl --runtime-endpoint unix:///run/containerd/containerd.sock \
+    pull k8s.gcr.io/pause:3.7

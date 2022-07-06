@@ -1,0 +1,13 @@
+---
+- name: Preparation of Nodes
+  hosts: all
+  tasks:
+    - include_vars: vars/vars.yaml
+    - include_tasks: tasks/common_tasks.yaml
+    - include_tasks: tasks/kubernetes_package_tasks.yaml
+    - include_tasks: tasks/cri_package_tasks.yaml
+
+- name: Setup Load Balancer
+  hosts: load_balancer
+  tasks:
+    - include_tasks: tasks/loadbalancer_tasks.yaml

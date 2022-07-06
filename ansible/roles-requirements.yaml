@@ -1,0 +1,8 @@
+---
+- name: robertdebock.dns
+  version: 3.1.2
+
+- src: https://git.archive.org/ansible-roles-contrib/ansible-keepalived
+  scm: git
+  version: master
+  name: ansible-keepalived
