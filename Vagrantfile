@@ -156,7 +156,7 @@ Vagrant.configure("2") do |config|
             ansible.galaxy_role_file = "ansible/roles-requirements.yaml"
             ansible.galaxy_command = "sudo ansible-galaxy install -r %{role_file} -p /usr/share/ansible/roles --force && sudo ansible-galaxy collection install -r ansible/collections-requirements.yaml -p /usr/share/ansible/collections " #--force
             ansible.galaxy_roles_path = "/usr/share/ansible/roles" #"/etc/ansible/roles"
-#            ansible.verbose = "-vvv"
+            ansible.verbose = "-vvv"
             ansible.limit = "all" 
             ansible.become = true
             ansible.extra_vars = {

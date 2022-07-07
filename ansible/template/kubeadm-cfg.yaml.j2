@@ -9,38 +9,12 @@ localAPIEndpoint:
 ---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: ClusterConfiguration
-etcd:
-    local:
-        serverCertSANs:
-        - "{{ansible_eth1.ipv4.address}}"
-        peerCertSANs:
-        - "{{ansible_eth1.ipv4.address}}"
-        extraArgs:
-            initial-cluster: {{etcd_initial_cluster}}
-            initial-cluster-state: new
-            name: "{{ansible_hostname}}"
-            listen-peer-urls: "https://{{ansible_eth1.ipv4.address}}:2380"
-            listen-client-urls: "https://{{ansible_eth1.ipv4.address}}:2379"
-            advertise-client-urls: "https://{{ansible_eth1.ipv4.address}}:2379"
-            initial-advertise-peer-urls: "https://{{ansible_eth1.ipv4.address}}:2380"
 controlPlaneEndpoint: "{{kubernetes_vip}}:{{kubernetes_vip_port}}"
 apiServer:
-  timeoutForControlPlane: 8m0s
-  certSANs:
-  - "127.0.0.1"
-  - "10.96.0.1"
-  - "kubernetes"
-  - "kubernetes.default"
-  - "kubernetes.default.svc"
-  - "kubernetes.default.svc.{{domain}}"
-  - "{{kubernetes_vip}}"
-{% for host in groups['kube_master'] %}
-  - "{{host}}"
-  - "{{hostvars[host].ansible_host}}"
-{% endfor %}
+    timeoutForControlPlane: 8m0s
 networking:
-  dnsDomain: {{domain}}
-
+    dnsDomain: {{domain}}
+    podSubnet: 10.244.0.0/16
 ---
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1

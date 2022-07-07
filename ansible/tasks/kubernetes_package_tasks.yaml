@@ -8,6 +8,16 @@
     repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
     filename: kubernetes
 
+- name: Add the HashiCorp GPG key.
+  ansible.builtin.apt_key:
+    url: https://apt.releases.hashicorp.com/gpg
+    keyring: /usr/share/keyrings/hashicorp-release-keyring.gpg
+
+- name: Add the HashiCorp apt repository.
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-release-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+    filename: hashicorp
+
 - name: "Update the repository cache (Ubuntu)"
   apt:
     update_cache: yes
@@ -18,3 +28,8 @@
     - kubelet
     - kubeadm
     - kubectl
+    - bash-completion
+    - consul-k8s
+
+- name: Enable kubectl autocompletion
+  ansible.builtin.shell: kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
