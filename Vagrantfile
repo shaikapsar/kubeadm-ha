@@ -171,7 +171,6 @@ Vagrant.configure("2") do |config|
                 cfssl_version: cfssl_version,
                 deployer_certificate_directory: deployer_certificate_directory,
                 deployer_configuration_directory: deployer_configuration_directory,
-                
             }
           end
 

@@ -4,7 +4,7 @@ global_defs {
 vrrp_script check_apiserver {
   script "{{check_script}}"
   interval 3
-#  weight -2
+  weight -2
   fall 10
   rise 2
 }
@@ -23,5 +23,11 @@ vrrp_instance VI_1 {
     }
     track_script {
         check_apiserver
+    }
+    unicast_src_ip {{ unicast_src_ip }}
+    unicast_peer {
+{% for peer in unicast_peers %}
+        {{ peer }}
+{% endfor %}
     }
 }

@@ -1,3 +1,7 @@
 .vagrant/
 downloads
 inventory
+*.tar.xz
+*LFD*
+.vscode/
+spec/

@@ -8,28 +8,75 @@
     repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
     filename: kubernetes
 
+- name: "Update the repository cache (Ubuntu)"
+  apt:
+    update_cache: yes
+
+- name: "Install kubelet, kubeadm, kubectl packages (Ubuntu)"
+  ansible.builtin.apt:
+    pkg:
+      - kubelet=1.23.7-00
+      - kubeadm=1.23.7-00
+      - kubectl=1.23.7-00
+      - kubetail
+    allow_downgrade: true
+    autoclean: true
+    autoremove: true
+
+- name: Prevent kubernetes from being upgraded
+  ansible.builtin.dpkg_selections:
+    name: "{{item}}"
+    selection: hold
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubetail
+
+- name: Enable kubectl autocompletion
+  ansible.builtin.shell: kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+
+- name: "Check kubelet args in kubelet config (Ubuntu)"
+  shell: grep "^Environment=\"KUBELET_EXTRA_ARGS=" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf || true
+  register: check_args
+
+- name: "Add runtime args in kubelet conf (Ubuntu)"
+  lineinfile:
+    dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+    line: 'Environment="KUBELET_EXTRA_ARGS= --runtime-cgroups=/system.slice/containerd.service --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"'
+    insertafter: '\[Service\]'
+
+- name: "Start Kubelet"
+  systemd: name=kubelet daemon_reload=yes state=started enabled=yes
+
+- name: "Pre-pull pause container image"
+  shell: |
+    /usr/local/bin/ctr pull k8s.gcr.io/pause:3.7
+    /usr/local/bin/crictl --runtime-endpoint unix:///run/containerd/containerd.sock \
+    pull k8s.gcr.io/pause:3.7
+
 - name: Add the HashiCorp GPG key.
   ansible.builtin.apt_key:
     url: https://apt.releases.hashicorp.com/gpg
     keyring: /usr/share/keyrings/hashicorp-release-keyring.gpg
+  when: inventory_hostname == groups['kube_master'][0]
 
 - name: Add the HashiCorp apt repository.
   ansible.builtin.apt_repository:
     repo: deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-release-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
     filename: hashicorp
+  when: inventory_hostname == groups['kube_master'][0]
 
-- name: "Update the repository cache (Ubuntu)"
+- name: "Update the repository cache (Ubuntu) for HashiCorp Packages"
   apt:
     update_cache: yes
+  when: inventory_hostname == groups['kube_master'][0]
 
 - name: "Install kubelet, kubeadm, kubectl (Ubuntu)"
-  apt: name={{item}} state=present
-  with_items:
-    - kubelet
-    - kubeadm
-    - kubectl
-    - bash-completion
-    - consul-k8s
-
-- name: Enable kubectl autocompletion
-  ansible.builtin.shell: kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+  ansible.builtin.apt:
+    pkg:
+      - consul-k8s
+    allow_downgrade: true
+    autoclean: true
+    autoremove: true
+  when: inventory_hostname == groups['kube_master'][0]

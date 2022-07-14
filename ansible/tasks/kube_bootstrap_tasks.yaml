@@ -1,0 +1,58 @@
+- name: Initialize the kubernetes HA on primary node
+  ansible.builtin.shell: |
+    kubeadm certs certificate-key
+  register: certificate_key
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: set certificate-key as fact
+  ansible.builtin.set_fact:
+    certificateKey: "{{ certificate_key.stdout }}"
+  run_once: true
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Generate Kubeadm configuration for each master instance.
+  ansible.builtin.template:
+    src: /vagrant/ansible/template/kubeadm-cfg.yaml.j2
+    dest: /home/vagrant/kubeadm-cfg.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Copy calico.yaml manifest in deployment directory
+  ansible.builtin.copy:
+    src: /vagrant/ansible/files/calico.yaml
+    dest: /home/vagrant/calico.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Initialize the kubernetes HA on primary node
+  ansible.builtin.shell: |
+    kubeadm init --config=/home/vagrant/kubeadm-cfg.yaml --upload-certs > /dev/null
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Install flannel CNI Addon.
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    kubectl apply -f /home/vagrant/calico.yaml > /dev/null
+  when: inventory_hostname == groups['kube_master'][0]
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Generate the Join command
+  ansible.builtin.shell: |
+    kubeadm token create --print-join-command
+  register: join_command
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: set join command as fact
+  ansible.builtin.set_fact:
+    joinCommand: "{{ join_command.stdout }}"
+  run_once: true
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Join other Kubernetes control-plane nodes to the cluster
+  ansible.builtin.shell: |
+    {{ joinCommand }} --control-plane --certificate-key {{certificateKey}} --apiserver-advertise-address {{ansible_eth1.ipv4.address}}
+  when: inventory_hostname in groups["kube_master"]  and inventory_hostname != groups['kube_master'][0]
+
+- name: Join other Kubernetes worker nodes to the cluster
+  ansible.builtin.shell: |
+    {{ joinCommand }} --apiserver-advertise-address {{ansible_eth1.ipv4.address}}
+  when: inventory_hostname in groups["kube_worker"]

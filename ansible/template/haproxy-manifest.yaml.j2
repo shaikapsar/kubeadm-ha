@@ -3,6 +3,9 @@ kind: Pod
 metadata:
   name: haproxy
   namespace: kube-system
+  labels:
+    component: haproxy
+    tier: control-plane
 spec:
   containers:
   - image: haproxy
@@ -36,7 +39,13 @@ spec:
     - mountPath: /usr/share/ca-certificates
       name: usr-share-ca-certificates
       readOnly: true
-
+  tolerations:
+    # Mark the pod as a critical add-on for rescheduling.
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: node-role.kubernetes.io/master
+      effect: NoSchedule
+  priorityClassName: system-cluster-critical
   hostNetwork: true
   volumes:
   - hostPath:

@@ -36,12 +36,10 @@
   vars:
     check_script: "/etc/keepalived/check_apiserver.sh"
     state: "{{ (groups['load_balancer'].index(inventory_hostname) == 0) | ternary('MASTER','BACKUP') }}"
-    priority: "{{ (groups['all']|length - groups['all'].index(inventory_hostname)) * 250 // (groups['all']|length) }}"
+    #priority: "{{ (groups['load_balancer']|length - groups['load_balancer'].index(inventory_hostname)) * 250 // (groups['load_balancer']|length) }}"
+    priority: "{{ 250 - groups['load_balancer'].index(inventory_hostname) }}"
     interface: "{{ vrrp_nic }}"
     authentication_password: 1234
     virtual_router_id: 42
-
-- name: Generate Kubeadm configuration for each master instance.
-  ansible.builtin.template:
-    src: /vagrant/ansible/template/kubeadm-cfg.yaml.j2
-    dest: "/tmp/kubeadm-cfg.yaml"
+    unicast_src_ip: "{{ ansible_eth1.ipv4.address}}"
+    unicast_peers: "{{ groups['load_balancer'] | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) }}"

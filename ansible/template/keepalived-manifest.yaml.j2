@@ -4,6 +4,9 @@ metadata:
   creationTimestamp: null
   name: keepalived
   namespace: kube-system
+  labels:
+    component: keepalived
+    tier: control-plane
 spec:
   containers:
     - image: osixia/keepalived:2.0.17
@@ -20,6 +23,13 @@ spec:
           name: config
         - mountPath: /etc/keepalived/check_apiserver.sh
           name: check
+  tolerations:
+    # Mark the pod as a critical add-on for rescheduling.
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: node-role.kubernetes.io/master
+      effect: NoSchedule
+  priorityClassName: system-cluster-critical
   hostNetwork: true
   volumes:
     - hostPath:

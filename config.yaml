@@ -7,14 +7,14 @@ domain: cluster.local
 
 infra_network:
   prefix: 24
-  network: 192.168.56.0
+  network: 10.196.56.0
 
 deployer_certificate_directory: /etc/kubernetes/pki
 deployer_configuration_directory: /opt/deployer/config
 
 vrrp_nic: eth1
 
-kubernetes_vip: 192.168.56.10
+kubernetes_vip: 10.196.56.10
 kubernetes_vip_port: 8443
 kubernetes_api_port: 6443
 
@@ -32,7 +32,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3b
-    base_address: 192.168.56.11
+    base_address: 10.196.56.11
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -49,7 +49,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3c
-    base_address: 192.168.56.12
+    base_address: 10.196.56.12
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -66,7 +66,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3d
-    base_address: 192.168.56.13
+    base_address: 10.196.56.13
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -83,7 +83,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3e
-    base_address: 192.168.56.14
+    base_address: 10.196.56.14
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -99,7 +99,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3f
-    base_address: 192.168.56.15
+    base_address: 10.196.56.15
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -115,7 +115,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3g
-    base_address: 192.168.56.16
+    base_address: 10.196.56.16
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -131,7 +131,7 @@ servers:
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3a
-    base_address: 192.168.56.5
+    base_address: 10.196.56.5
     hostmanager:
       manage_guest: true
     ansible_user: vagrant
@@ -140,3 +140,4 @@ servers:
       cpus: 4
     roles:
       - deployer
+      - kube_worker
