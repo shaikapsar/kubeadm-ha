@@ -56,3 +56,8 @@
   ansible.builtin.shell: |
     {{ joinCommand }} --apiserver-advertise-address {{ansible_eth1.ipv4.address}}
   when: inventory_hostname in groups["kube_worker"]
+
+- name: Approve the all the CSR for kubernetes.io/kubelet-serving signerName
+  ansible.builtin.shell: |
+    kubectl get csr --no-headers | grep -v Approved | awk '{print $1}' | xargs kubectl certificate approve
+  when: inventory_hostname == groups['kube_master'][0]

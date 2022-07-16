@@ -7,6 +7,7 @@ certificateKey: "{{certificateKey}}"
 localAPIEndpoint:
     advertiseAddress: "{{ansible_eth1.ipv4.address}}"
     bindPort: {{kubernetes_api_port}}
+    criSocket: unix:///var/run/containerd/containerd.sock
 ---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: ClusterConfiguration
