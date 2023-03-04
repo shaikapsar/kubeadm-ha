@@ -4,8 +4,8 @@
     dest: "/"
     remote_src: yes
 
-- name: "remove a 10-containerd-net.conflist cni config files"
-  file: path=/etc/cni/net.d/10-containerd-net.conflist state=absent
+#- name: "remove a 10-containerd-net.conflist cni config files"
+#  file: path=/etc/cni/net.d/10-containerd-net.conflist state=absent
 
 - name: "Create a directory for cni binary"
   file: path={{ cni_bin_dir }} state=directory
@@ -18,8 +18,7 @@
 
 - name: "Start Containerd"
   systemd: name=containerd daemon_reload=yes state=restarted enabled=yes
-
-- name: Prepare configuration for Forwarding IPv4 and letting iptables see bridged traffic
-  ansible.builtin.copy:
-    src: "/vagrant/ansible/files/crictl.yaml"
-    dest: "/etc/crictl.yaml"
+#- name: Prepare configuration for Forwarding IPv4 and letting iptables see bridged traffic
+#  ansible.builtin.copy:
+#    src: "/vagrant/ansible/files/crictl.yaml"
+#    dest: "/etc/crictl.yaml"

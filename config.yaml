@@ -9,6 +9,8 @@ infra_network:
   prefix: 24
   network: 10.196.56.0
 
+metallb_ip_pool_range: 10.196.56.100-10.196.56.254
+
 deployer_certificate_directory: /etc/kubernetes/pki
 deployer_configuration_directory: /opt/deployer/config
 
@@ -45,7 +47,7 @@ servers:
       - load_balancer
 
   - id: kube-master-2
-    enable: true
+    enable: false
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3c
@@ -62,7 +64,7 @@ servers:
       - load_balancer
 
   - id: kube-master-3
-    enable: true
+    enable: false
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3d
@@ -88,7 +90,7 @@ servers:
       manage_guest: true
     ansible_user: vagrant
     resources:
-      memory: 1024
+      memory: 2048
       cpus: 4
     roles:
       - kube_worker
@@ -104,14 +106,14 @@ servers:
       manage_guest: true
     ansible_user: vagrant
     resources:
-      memory: 1024
+      memory: 2048
       cpus: 4
     roles:
       - kube_worker
     pod_cidr: 10.200.1.0/24
 
   - id: kube-worker-3
-    enable: true
+    enable: false
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3g
@@ -120,14 +122,14 @@ servers:
       manage_guest: true
     ansible_user: vagrant
     resources:
-      memory: 1024
+      memory: 2048
       cpus: 4
     roles:
       - kube_worker
     pod_cidr: 10.200.2.0/24
 
   - id: infra-deployer
-    enable: true
+    enable: false
     box: bento/ubuntu-20.04
     box_version: 202112.19.0
     base_mac: 00:0c:29:31:ff:3a
@@ -140,4 +142,3 @@ servers:
       cpus: 4
     roles:
       - deployer
-      - kube_worker

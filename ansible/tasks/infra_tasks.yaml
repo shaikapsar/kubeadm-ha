@@ -1,0 +1,30 @@
+- name: Install helm3
+  ansible.builtin.shell: |
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+    #sudo mv /usr/local/bin/helm /usr/local/bin/helm3
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Prepare metallb ip pool configuration
+  ansible.builtin.template:
+    src: /vagrant/ansible/template/metallb_helm_values.yaml.j2
+    dest: /home/vagrant/metallb_helm_values.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Install metallb
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    helm repo add metallb https://metallb.github.io/metallb
+    helm repo update
+    helm upgrade --install metallb metallb/metallb --namespace infra --create-namespace
+    kubectl apply -f /home/vagrant/metallb_helm_values.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Install ingress-nginx
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo update
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace infra --create-namespace
+  when: inventory_hostname == groups['kube_master'][0]

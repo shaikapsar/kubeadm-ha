@@ -7,17 +7,42 @@ certificateKey: "{{certificateKey}}"
 localAPIEndpoint:
     advertiseAddress: "{{ansible_eth1.ipv4.address}}"
     bindPort: {{kubernetes_api_port}}
-    criSocket: unix:///var/run/containerd/containerd.sock
+#    criSocket: unix:///var/run/containerd/containerd.sock
 ---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: ClusterConfiguration
+{% if groups['kube_master'] | length != 1 %}
 controlPlaneEndpoint: "{{kubernetes_vip}}:{{kubernetes_vip_port}}"
+{% endif %}
 apiServer:
-    timeoutForControlPlane: 8m0s
+  timeoutForControlPlane: 4m0s
+#  extraArgs:
+#    log-dir: /var/log/kubernetes
+#    logtostderr: "false"
+#  extraVolumes:
+#  - name: "var-log-kubernetes"
+#    hostPath: "/var/log/kubernetes"
+#    mountPath: "/var/log/kubernetes"
+#    readOnly: false
+#    pathType: Directory
+controllerManager:
+#  extraArgs:
+#    log-dir: /var/log/kubernetes
+#    logtostderr: "false"
+#  extraVolumes:
+#  - name: "var-log-kubernetes"
+#    hostPath: "/var/log/kubernetes"
+#    mountPath: "/var/log/kubernetes"
+#    readOnly: false
+#    pathType: Directory
+#dns:
+#  type: CoreDNS
+etcd:
+  local:
+    dataDir: /var/lib/etcd
 networking:
     dnsDomain: {{domain}}
     podSubnet: 192.168.0.0/16
-#    podSubnet: 10.244.0.0/16
 ---
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1

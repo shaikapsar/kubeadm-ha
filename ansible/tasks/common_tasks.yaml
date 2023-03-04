@@ -29,17 +29,6 @@
     name: "{{ item }}"
     state: latest
   with_items:
-    - unzip
-    - tar
-    - apt-transport-https
-    - libseccomp2
-    - util-linux
-    - ca-certificates
-    - curl
-    - net-tools
-    - tree
-    - arping
-    - ipvsadm
     - bash-completion
 
 - name: "Load br_netfilter kernel module"

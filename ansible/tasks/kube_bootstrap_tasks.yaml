@@ -1,7 +1,19 @@
+- name: kubernetes log directory
+  ansible.builtin.file:
+    path: /var/log/kubernetes
+    state: directory
+    mode: "0755"
+
 - name: Initialize the kubernetes HA on primary node
   ansible.builtin.shell: |
     kubeadm certs certificate-key
   register: certificate_key
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: set certificate-key as fact
+  ansible.builtin.set_fact:
+    certificateKey: "{{ certificate_key.stdout }}"
+  run_once: true
   when: inventory_hostname == groups['kube_master'][0]
 
 - name: set certificate-key as fact
@@ -15,6 +27,8 @@
     src: /vagrant/ansible/template/kubeadm-cfg.yaml.j2
     dest: /home/vagrant/kubeadm-cfg.yaml
   when: inventory_hostname == groups['kube_master'][0]
+#  vars:
+#    KUBE_MASTER_COUNT: "{{ groups['kube_master'] | length }}"
 
 - name: Copy calico.yaml manifest in deployment directory
   ansible.builtin.copy:
@@ -59,5 +73,31 @@
 
 - name: Approve the all the CSR for kubernetes.io/kubelet-serving signerName
   ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
     kubectl get csr --no-headers | grep -v Approved | awk '{print $1}' | xargs kubectl certificate approve
+  when: inventory_hostname == groups['kube_master'][0]
+  ignore_errors: true
+
+- name: Prepare local path storage manifest.
+  ansible.builtin.template:
+    src: /vagrant/ansible/template/local-path-storage.yaml.j2
+    dest: /home/vagrant/local-path-storage.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Deploy the local path storage solution
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    kubectl apply -f /home/vagrant/local-path-storage.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Prepare metric server manifest.
+  ansible.builtin.copy:
+    src: /vagrant/ansible/files/metrics-server-high-availability.yaml
+    dest: /home/vagrant/metrics-server-high-availability.yaml
+  when: inventory_hostname == groups['kube_master'][0]
+
+- name: Deploy the HA metric server.
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    kubectl apply -f /home/vagrant/metrics-server-high-availability.yaml
   when: inventory_hostname == groups['kube_master'][0]

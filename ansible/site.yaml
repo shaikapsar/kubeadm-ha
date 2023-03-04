@@ -19,3 +19,10 @@
   tasks:
     - include_vars: vars/vars.yaml
     - include_tasks: tasks/kube_bootstrap_tasks.yaml
+
+- name: Bootstrap Infrastructure
+  hosts:
+    - kube_master
+  tasks:
+    - include_vars: vars/vars.yaml
+    - include_tasks: tasks/infra_tasks.yaml

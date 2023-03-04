@@ -78,7 +78,7 @@ vrrp_nic = config_data.fetch('vrrp_nic')
 kubernetes_vip_port = config_data.fetch('kubernetes_vip_port')
 kubernetes_release = config_data.fetch('kubernetes_release')
 kubernetes_api_port = config_data.fetch('kubernetes_api_port')
-
+metallb_ip_pool_range = config_data.fetch('metallb_ip_pool_range')
 
 deployer_certificate_directory = config_data.fetch('deployer_certificate_directory')
 deployer_configuration_directory = config_data.fetch('deployer_configuration_directory')
@@ -108,8 +108,7 @@ File.open("inventory", "w+") {
     end
   end
 
-  f.write("\n[all:vars]\nansible_ssh_pass=vagrant\ndomain=#{domain}\netcd_initial_cluster=#{etcd_initial_cluster}\nkubernetes_api_port=#{kubernetes_api_port}\nkubernetes_vip=#{kubernetes_vip}\netcd_servers=#{etcd_servers}\nvrrp_nic=#{vrrp_nic}\nkubernetes_vip_port=#{kubernetes_vip_port}\nkubernetes_release=#{kubernetes_release}\ncfssl_version=#{cfssl_version}\ndeployer_certificate_directory=#{deployer_certificate_directory}\ndeployer_configuration_directory=#{deployer_configuration_directory}") 
-
+  f.write("\n[all:vars]\nansible_ssh_pass=vagrant\ndomain=#{domain}\netcd_initial_cluster=#{etcd_initial_cluster}\nkubernetes_api_port=#{kubernetes_api_port}\nkubernetes_vip=#{kubernetes_vip}\netcd_servers=#{etcd_servers}\nvrrp_nic=#{vrrp_nic}\nkubernetes_vip_port=#{kubernetes_vip_port}\nkubernetes_release=#{kubernetes_release}\nmetallb_ip_pool_range=#{metallb_ip_pool_range}\ncfssl_version=#{cfssl_version}\ndeployer_certificate_directory=#{deployer_certificate_directory}\ndeployer_configuration_directory=#{deployer_configuration_directory}")
 }
 
 
@@ -148,8 +147,7 @@ Vagrant.configure("2") do |config|
         node.vm.network "private_network", ip: server.fetch('base_address')
         
         if server.fetch('roles').include? 'deployer'  then
-          #puts "s iThis deployer.\n\n"
-          node.vm.provision "ansible_local" do |ansible|
+            node.vm.provision "ansible_local" do |ansible|
             ansible.playbook = "ansible/site.yaml"
             ansible.inventory_path = "inventory"
             ansible.config_file = "ansible/ansible.cfg"
